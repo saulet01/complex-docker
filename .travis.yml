@@ -1,0 +1,20 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t saulet/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true saulet/react-test npm test
+
+after_success: 
+    - docker build -t saulet/multi-client ./client
+    - docker build -t saulet/multi-nginx ./nginx
+    - docker build -t saulet/multi-server ./server
+    - docker build -t saulet/multi-worker ./worker
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --pasword-stdin
+    - docker push saulet/multi-client
+    - docker push saulet/multi-worker
+    - docker push saulet/multi-server
+    - docker push saulet/multi-nginx
